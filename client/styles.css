@@ -1,0 +1,11 @@
+.match {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1px solid black;
+    margin: 5px;
+}
+
+.match.completed {
+    background: black;
+}
