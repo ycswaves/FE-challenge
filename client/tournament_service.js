@@ -5,31 +5,29 @@ const defaultFetchConfigs = {
   }
 }
 
-const COUNT_THRESHOLD = 100;
-const WAIT_TIME = 1100;
+const REQ_COUNT_THRESHOLD = 1000;
 
 class TournamentService {
   constructor() {
     this.requestCount = 0;
-    this.delayedRequestCount = 0;
-    this.batchIndex = 1;
+    this.requestQueue = [];
+    this._requestHandled = this._requestHandled.bind(this);
   }
 
   _applyLimit(fn) {
-    this.requestCount++;
-    console.log(this.requestCount);
-    if (this.requestCount > COUNT_THRESHOLD) {
-      console.log('apply limit', WAIT_TIME * this.batchIndex)
-      setTimeout(() => {
-        fn();
-        this.delayedRequestCount++;        
-        if (this.delayedRequestCount > COUNT_THRESHOLD) {
-          this.requestCount = 0;
-          this.delayedRequestCount = 0;
-          this.batchIndex++;
-        }
-      }, WAIT_TIME * this.batchIndex);
+    if (this.requestCount > REQ_COUNT_THRESHOLD) {
+      this.requestQueue.push(fn);
     } else {
+      fn();
+      this.requestCount++;        
+    }
+  }
+
+  _requestHandled() {
+    this.requestCount--;
+
+    if (this.requestQueue.length > 0) {
+      const fn = this.requestQueue.shift();
       fn();
     }
   }
@@ -39,43 +37,42 @@ class TournamentService {
       const promise = fetch("/tournament", FetchUtil.getFetchConfig(
         FetchUtil.parameterize({teamsPerMatch, numberOfTeams})
       ));
-      FetchUtil.handlePromise(promise, cb);
+      FetchUtil.handlePromise(promise, cb, this._requestHandled);
     })
     
   }
 
   getTeamData(tournamentId, teamId, cb) {
     this._applyLimit(() => {
-      
       const promise = fetch(`/team?${FetchUtil.parameterize({tournamentId, teamId})}`);
-      FetchUtil.handlePromise(promise, cb);
+      FetchUtil.handlePromise(promise, cb, this._requestHandled);
     })
   }
 
   getMatchData(tournamentId, round, match, cb) {
     this._applyLimit(() => {
-      
       const promise = fetch(`/match?${FetchUtil.parameterize({tournamentId, round, match})}`);
-      FetchUtil.handlePromise(promise, cb);
+      FetchUtil.handlePromise(promise, cb, this._requestHandled);
     })
   }
 
   getWinner(tournamentId, matchScore, teamScores, cb) {
     this._applyLimit(() => {
-      
       const promise = fetch(`/winner?${FetchUtil.parameterize({tournamentId, teamScores, matchScore})}`);
-      FetchUtil.handlePromise(promise, cb);
+      FetchUtil.handlePromise(promise, cb, this._requestHandled);
     })
   }
 }
 
 class FetchUtil {
-  static handlePromise(res, cb) {
+  static handlePromise(res, cb, notifyReqQueue) {
     if (typeof cb !== 'function') return false;
 
+    // todo: change to chainable promise so that only one catch is needed
     res.then(res => {
       res.json()
          .then(res => {
+            notifyReqQueue();
             if (res.error) {
               cb(res);
             } else {
@@ -90,7 +87,7 @@ class FetchUtil {
 
   static getFetchConfig(body) {
     return {
-      method: "POST",
+      method: "POST", //TODO: use defaultFetchConfigs
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
       },

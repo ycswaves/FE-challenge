@@ -1,9 +1,10 @@
 class FixtureManager {
-  constructor(numberOfRounds, teamsPerMatch) {
+  constructor(numberOfRounds, teamsPerMatch, tournamentService) {
     this.matchInfoMap = {};
     this.teamInfoMap = {};
     this.teamsPerMatch = teamsPerMatch;
     this.numberOfRounds = numberOfRounds;
+    this.tournamentService = tournamentService;
   }
 
   addMatchUp(matchId, roundId, score, tournamentId, teamIds) {
@@ -20,9 +21,9 @@ class FixtureManager {
       }
 
     } else {
-      View.addMatch(key);      
+      View.addMatch(key);
       const teamsIdsReformatted = !isNaN(teamIds)? [teamIds] : teamIds;
-      matchUp = new MatchUp(matchId, roundId, score, tournamentId, teamsIdsReformatted);
+      matchUp = new MatchUp(this.tournamentService, matchId, roundId, score, tournamentId, teamsIdsReformatted);
     }
 
     matchUp.compete(this.teamsPerMatch, this.teamInfoMap, (winner) => {

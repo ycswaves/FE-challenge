@@ -1,11 +1,11 @@
 class MatchUp {
-  constructor(matchId, roundId, score, tournamentId, teamIds = []) {
+  constructor(tournamentService, matchId, roundId, score, tournamentId, teamIds = []) {
     this.matchId = matchId;
     this.roundId = roundId;
     this.score = score;
     this.tournamentId = tournamentId;
     this.teamIds = teamIds;
-    this.tournamentService = new TournamentService();
+    this.tournamentService = tournamentService;
   }
 
   getMatchScore() {
@@ -56,7 +56,9 @@ class MatchUp {
   }
 
   _readyToCompete(teamsPerMatch, teamInfoMap) {
-    return this.teamIds.length >= teamsPerMatch && this._teamScoreReady(teamInfoMap);
+    return this.teamIds.length >= teamsPerMatch 
+          && this._teamScoreReady(teamInfoMap)
+          && this.score != undefined;
   }
 
   _teamScoreReady(teamInfoMap) {

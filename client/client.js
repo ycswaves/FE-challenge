@@ -15,7 +15,7 @@ class Tournament {
     this.numberOfTeams = numberOfTeams;
 
     const numberOfRounds = this._getNumberOfRounds();
-    this.fixtureManager = new FixtureManager(numberOfRounds, this.teamsPerMatch, this.numberOfTeams);
+    this.fixtureManager = new FixtureManager(numberOfRounds, this.teamsPerMatch, this.tournamentService);
 
 
     this.tournamentService.getMatchUps(teamsPerMatch, numberOfTeams, (err, res) => {
