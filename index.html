@@ -2,10 +2,10 @@
 <html>
   <head>
     <link rel="stylesheet" href="./client/styles.css">
+    <script type="text/javascript" src="./client/view_manager.js"></script>
     <script type="text/javascript" src="./client/tournament_service.js"></script>
     <script type="text/javascript" src="./client/models/matchup.js"></script>
     <script type="text/javascript" src="./client/models/team.js"></script>
-    <script type="text/javascript" src="./client/view_manager.js"></script>
     <script type="text/javascript" src="./client/fixture_manager.js"></script>
     <script type="text/javascript" src="./client/client.js"></script>
     <title>Knockout Tournament</title>
@@ -15,8 +15,9 @@
     <!-- For tests to pass, the IDs of the elements below MUST NOT change. -->
     <input id="teamsPerMatch" placeholder="Teams per match" type="number" />
     <input id="numberOfTeams" placeholder="Number of teams" type="number" />
-    <button id="start">Start</button>
-    <h2 id="winner"></h2>
+    <button id="start" class="primary">Start</button>
+    <h4 id="winner-message" style="visibility: hidden"><span id="winner"></span> is the Winner.</h4>
+    <div id="error" class="error-container"></div>
     <div id="match-progress"></div>
   </body>
 </html>

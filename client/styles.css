@@ -1,3 +1,31 @@
+input {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 0.8em;
+}
+
+button.primary {
+    background-color: #7878F9;
+    color: white;
+    border: 0;
+    border-radius: 5px;
+    padding: 11px 20px;
+    font-size: 0.8em;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: #ccc
+}
+
+input:focus, button:focus {
+    outline: none;
+}
+
 .match {
     display: inline-block;
     width: 10px;

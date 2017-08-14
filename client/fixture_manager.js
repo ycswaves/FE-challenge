@@ -57,9 +57,10 @@ class FixtureManager {
 
     if (this._isLastMatch(matchId, currentRoundId)) {
       View.showWinner(this.teamInfoMap[winnerId].getName());
-      // console.log('====== winner =====', this.teamInfoMap[winnerId]);
     } else {
       //add winner to next round match
+      const key = this._getMatchUpKey(matchId, currentRoundId);
+      delete this.matchInfoMap[key];
       this.addMatchUp(nextRoundMatchId, currentRoundId + 1, undefined, tournamentId, winnerId);      
     }
   }

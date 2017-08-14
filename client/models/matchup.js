@@ -5,8 +5,7 @@ class MatchUp {
     this.score = score;
     this.tournamentId = tournamentId;
     this.teamIds = teamIds;
-
-    console.log(this)
+    this.tournamentService = new TournamentService();
   }
 
   getMatchScore() {
@@ -36,9 +35,9 @@ class MatchUp {
 
     const { tournamentId, score, matchId, roundId, teamIds } = this;
     const teamScores = teamIds.map(teamId => teamInfoMap[teamId].getScore());
-    TournamentService.getWinner(tournamentId, score, teamScores, (err, winnerScore) => {
-      if(err) {
-        console.log(err);
+    this.tournamentService.getWinner(tournamentId, score, teamScores, (err, winnerScore) => {
+      if (err) {
+        View.showError(err.message || 'Error occurs');
         return;
       }
 
