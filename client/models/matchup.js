@@ -35,12 +35,7 @@ class MatchUp {
 
     const { tournamentId, score, matchId, roundId, teamIds } = this;
     const teamScores = teamIds.map(teamId => teamInfoMap[teamId].getScore());
-    this.tournamentService.getWinner(tournamentId, score, teamScores, (err, winnerScore) => {
-      if (err) {
-        View.showError(err.message || 'Error occurs');
-        return;
-      }
-
+    this.tournamentService.getWinner(tournamentId, score, teamScores).then(winnerScore => {
       let winnerId, lowest = -1;
       teamIds.forEach(teamId => {
         const teamInfo = teamInfoMap[teamId];
@@ -52,7 +47,9 @@ class MatchUp {
 
       this.winnerId = winnerId;
       cb({winnerId, matchId, tournamentId, currentRoundId: roundId});
-    })
+    }).catch(err => {
+      View.showError(err.message || 'Error occurs');
+    });
   }
 
   _readyToCompete(teamsPerMatch, teamInfoMap) {

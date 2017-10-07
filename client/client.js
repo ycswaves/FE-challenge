@@ -18,36 +18,26 @@ class Tournament {
     this.fixtureManager = new FixtureManager(numberOfRounds, this.teamsPerMatch, this.tournamentService);
 
 
-    this.tournamentService.getMatchUps(teamsPerMatch, numberOfTeams, (err, res) => {
-      if (err) {
-        View.showError(err.message || 'Error occurs');
-        return;
-      }
+    this.tournamentService.getMatchUps(teamsPerMatch, numberOfTeams).then(res => {
 
       const { tournamentId, matchUps } = res;
       this.tournamentId = tournamentId;
 
       const roundIndex = 0;
       matchUps.forEach(({match, teamIds}) => {
-        this.tournamentService.getMatchData(tournamentId, roundIndex, match, (err, matchResult) => {
-          if (err) {
-            View.showError(err.message || 'Error occurs');
-            return;
-          }
-
+        this.tournamentService.getMatchData(tournamentId, roundIndex, match).then(matchResult => {
           this.fixtureManager.addMatchUp(match, roundIndex, matchResult.score, this.tournamentId, teamIds);
+        }).catch(err => {
+          View.showError(err.message || 'Error occurs');
         });
 
         teamIds.forEach(teamId => {
-          this.tournamentService.getTeamData(tournamentId, teamId, (err, teamInfo) => {
-            if (err) {
-              View.showError(err.message || 'Error occurs');
-              return;
-            }
-
+          this.tournamentService.getTeamData(tournamentId, teamId).then(teamInfo => {
             const { teamId, name, score } = teamInfo;
             this.fixtureManager.addTeamInfo(teamId, name, score, match, roundIndex);
-          });
+          }).catch(err => {
+            View.showError(err.message || 'Error occurs');
+          });;
         });
       });
 
@@ -55,6 +45,9 @@ class Tournament {
         this._getRestOfMatchResults(numberOfRounds);
       }
 
+    }).catch(err => {
+      console.log('err', err);
+      View.showError(err.message || 'Error occurs');
     });
   }
 
@@ -71,13 +64,10 @@ class Tournament {
   _getRestOfMatchResults(numberOfRounds) {
     for (let roundIndex = 1; roundIndex < numberOfRounds; roundIndex++) {
       for (let matchId = 0; matchId < this._getMatchesPerRound(roundIndex); matchId++) {
-        this.tournamentService.getMatchData(this.tournamentId, roundIndex, matchId, (err, matchResult) => {
-          if (err) {
-            View.showError(err.message || 'Error occurs');
-            return;
-          }
-
+        this.tournamentService.getMatchData(this.tournamentId, roundIndex, matchId).then(matchResult => {
           this.fixtureManager.addMatchUp(matchId, roundIndex, matchResult.score, this.tournamentId);
+        }).catch(err => {
+          View.showError(err.message || 'Error occurs');
         });
       }
     }
