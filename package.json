@@ -6,7 +6,8 @@
     "start": "node ./server/index.js",
     "test:integration": "mocha ./test/integration/**/*_test.js",
     "test:karma": "karma start ./test/karma/karma-configuration.js",
-    "test": "npm run test:integration && npm run test:karma -- --single-run"
+    "test": "npm run test:integration && npm run test:karma -- --single-run",
+    "test:client": "mocha ./test/client/**/*_test.js || true"
   },
   "devDependencies": {
     "chai": "^3.5.0",
