@@ -25,11 +25,7 @@ class Tournament {
 
       const roundIndex = 0;
       matchUps.forEach(({match, teamIds}) => {
-        this.tournamentService.getMatchData(tournamentId, roundIndex, match).then(matchResult => {
-          this.fixtureManager.addNewMatchUp(match, roundIndex, this.tournamentId);
-        }).catch(err => {
-          View.showError(err.message || 'Error occurs'); console.log(err)
-        });
+        this.fixtureManager.addNewMatchUp(match, roundIndex, this.tournamentId);
 
         teamIds.forEach(teamId => {
           this.tournamentService.getTeamData(tournamentId, teamId).then(teamInfo => {
