@@ -7,63 +7,79 @@ class FixtureManager {
     this.tournamentService = tournamentService;
   }
 
-  addMatchUp(matchId, roundId, score, tournamentId, teamIds) {
+  addNewMatchUp(matchId, roundId, tournamentId, team = null) {
     const key = this._getMatchUpKey(matchId, roundId);
     let matchUp;
-    if (this.matchInfoMap[key]) { // existing matchUp info should either has only score or teams
+    if (this.matchInfoMap[key]) {
       matchUp = this.matchInfoMap[key]
-      if (score) {
-        matchUp.setScore(score);
-      }
-
-      if (!isNaN(teamIds)) { // add a single team
-        matchUp.addTeam(teamIds);
-      }
-
     } else {
+      matchUp = this.matchInfoMap[key] = new MatchUp(this.tournamentService, matchId, roundId, tournamentId);
       View.addMatch(key);
-      const teamsIdsReformatted = !isNaN(teamIds)? [teamIds] : teamIds;
-      matchUp = new MatchUp(this.tournamentService, matchId, roundId, score, tournamentId, teamsIdsReformatted);
     }
-
-    matchUp.compete(this.teamsPerMatch, this.teamInfoMap, (winner) => {
-      if (winner) {
-        this._handleWinner(winner);
+    matchUp.retrieveScore().then(matchResult => {      
+      matchUp.setScore(matchResult.score);
+      if(team) {
+        matchUp.addTeam(team);
       }
+      
+      matchUp.compete(this.teamsPerMatch).then(matchResult => {
+        this._handleWinner(matchResult);
+      });
+
+    }).catch(err => {
+      View.showError(err.message || 'Error occurs'); console.log(err)
     });
 
-    this.matchInfoMap[key] = matchUp;
   }
 
-  addTeamInfo(teamId, name, score, matchId, roundId) {
+  addTeamInfo(teamId, name, score, matchId, roundId, tournamentId) {
     const matchUpKey = this._getMatchUpKey(matchId, roundId);
     this.teamInfoMap[teamId] = new Team(teamId, name, score, matchUpKey);
 
-    if (this.matchInfoMap[matchUpKey]) {
-      const matchUp = this.matchInfoMap[matchUpKey];
-      matchUp.addTeam(teamId);
-      matchUp.compete(this.teamsPerMatch, this.teamInfoMap, (winner) => {
-        if (winner) {
-          this._handleWinner(winner)
-        }
-      });
-    } 
+    if (!this.matchInfoMap[matchUpKey]) {
+      this.matchInfoMap[matchUpKey] = new MatchUp(this.tournamentService, matchId, roundId, tournamentId);
+      View.addMatch(matchUpKey);
+    }
+
+    const matchUp = this.matchInfoMap[matchUpKey];
+    matchUp.addTeam(this.teamInfoMap[teamId]);
+
+    matchUp.compete(this.teamsPerMatch).then(matchResult => {
+      this._handleWinner(matchResult);
+    });
   }
 
-  _handleWinner(winner) {
-    const {winnerId, matchId, currentRoundId, tournamentId} = winner;
+  _handleWinner(matchResult) {
+    if (!matchResult) return;
+
+    const {winner, matchUp} = matchResult;
+    const matchId = matchUp.getMatchId();
+    const currentRoundId = matchUp.getRoundId();
     View.completeMatch(this._getMatchUpKey(matchId, currentRoundId));
     
     const nextRoundMatchId = Math.floor(matchId / this.teamsPerMatch);
 
     if (this._isLastMatch(matchId, currentRoundId)) {
-      View.showWinner(this.teamInfoMap[winnerId].getName());
-    } else {
-      //add winner to next round match
-      const key = this._getMatchUpKey(matchId, currentRoundId);
-      delete this.matchInfoMap[key];
-      this.addMatchUp(nextRoundMatchId, currentRoundId + 1, undefined, tournamentId, winnerId);      
+      View.showWinner(winner.getName());
+      return;
     }
+    
+    //add winner to next round match
+    const key = this._getMatchUpKey(matchId, currentRoundId);
+    delete this.matchInfoMap[key];
+
+    const nextRoundId = currentRoundId + 1
+    const nextRoundMatchKey =  this._getMatchUpKey(nextRoundMatchId, nextRoundId);
+    
+    let nextMatchUp = this.matchInfoMap[nextRoundMatchKey];
+    if (!nextMatchUp) {
+      this.addNewMatchUp(nextRoundMatchId, nextRoundId, matchUp.getTournamentId(), winner)
+    } else {
+      nextMatchUp.addTeam(winner)
+      nextMatchUp.compete(this.teamsPerMatch).then(matchResult => {
+        this._handleWinner(matchResult);
+      });
+    }   
   }
 
   _isLastMatch(matchId, roundId) {

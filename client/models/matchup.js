@@ -1,15 +1,32 @@
 class MatchUp {
-  constructor(tournamentService, matchId, roundId, score, tournamentId, teamIds = []) {
+  constructor(tournamentService, matchId, roundId, tournamentId) {
+    this.tournamentService = tournamentService;
     this.matchId = matchId;
     this.roundId = roundId;
-    this.score = score;
     this.tournamentId = tournamentId;
-    this.teamIds = teamIds;
-    this.tournamentService = tournamentService;
+    this.teams;
+    this.score;
+  }
+
+  getMatchId() {
+    return this.matchId;
+  }
+
+  getRoundId() {
+    return this.roundId;
+  }
+
+  getTournamentId() {
+    return this.tournamentId;
   }
 
   getMatchScore() {
     return this.score;
+  }
+
+  retrieveScore() {
+    const {tournamentId, roundId, matchId} = this
+    return this.tournamentService.getMatchData(tournamentId, roundId, matchId)
   }
 
   setScore(score) {
@@ -20,50 +37,44 @@ class MatchUp {
     return this.winnerId;
   }
 
-  addTeam(teamId) {
-    if (this.teamIds.indexOf(teamId) < 0) {
-      this.teamIds.push(teamId);
+  addTeam(newTeam) {
+    if (!this.teams) {
+      this.teams = [newTeam];
+    } else {
+      this.teams.push(newTeam);
     }
   }
 
-  compete(teamsPerMatch, teamInfoMap, cb) {
-    if (!this._readyToCompete(teamsPerMatch, teamInfoMap)) {
-      cb(false);
-      return false;
-    }
+  addAllTeams(newTeams) {
+    this.teams = newTeams;
+  }
 
-
-    const { tournamentId, score, matchId, roundId, teamIds } = this;
-    const teamScores = teamIds.map(teamId => teamInfoMap[teamId].getScore());
-    this.tournamentService.getWinner(tournamentId, score, teamScores).then(winnerScore => {
-      let winnerId, lowest = -1;
-      teamIds.forEach(teamId => {
-        const teamInfo = teamInfoMap[teamId];
-        if (winnerScore.score === teamInfo.score && (lowest === -1 || teamInfo.teamId < lowest)) {
-          winnerId = teamId;
-          lowest = teamId;
-        }
-      });
-
-      this.winnerId = winnerId;
-      cb({winnerId, matchId, tournamentId, currentRoundId: roundId});
-    }).catch(err => {
-      View.showError(err.message || 'Error occurs');
+  compete(teamsPerMatch) {
+    return new Promise((resolve, reject) => {
+      if (!this._readyToCompete(teamsPerMatch)) {
+        resolve(false);
+      } else {
+        const { tournamentId, score, matchId, roundId, teams } = this;
+        const teamScores = teams.map(team => team.getScore());
+        this.tournamentService.getWinner(tournamentId, score, teamScores).then(winnerScore => {
+          let winner, lowest = -1;
+          teams.forEach(team => {
+            if (winnerScore.score === team.score && (lowest === -1 || team.teamId < lowest)) {
+              winner = team;
+              lowest = winner.teamId;
+            }
+          });
+    
+          resolve({winner, matchUp: this});
+        }).catch(err => {
+          reject(err);
+        });
+      }
     });
   }
 
-  _readyToCompete(teamsPerMatch, teamInfoMap) {
-    return this.teamIds.length >= teamsPerMatch 
-          && this._teamScoreReady(teamInfoMap)
-          && this.score != undefined;
+  _readyToCompete(teamsPerMatch) {
+    return this.teams && this.teams.length >= teamsPerMatch && this.score != undefined;
   }
 
-  _teamScoreReady(teamInfoMap) {
-    for(let i = 0; i < this.teamIds.length; i++) {
-      if (!teamInfoMap[this.teamIds[i]]) {
-        return false;
-      }
-    }
-    return true;
-  }
- }
+}

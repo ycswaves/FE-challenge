@@ -26,51 +26,29 @@ class Tournament {
       const roundIndex = 0;
       matchUps.forEach(({match, teamIds}) => {
         this.tournamentService.getMatchData(tournamentId, roundIndex, match).then(matchResult => {
-          this.fixtureManager.addMatchUp(match, roundIndex, matchResult.score, this.tournamentId, teamIds);
+          this.fixtureManager.addNewMatchUp(match, roundIndex, this.tournamentId);
         }).catch(err => {
-          View.showError(err.message || 'Error occurs');
+          View.showError(err.message || 'Error occurs'); console.log(err)
         });
 
         teamIds.forEach(teamId => {
           this.tournamentService.getTeamData(tournamentId, teamId).then(teamInfo => {
             const { teamId, name, score } = teamInfo;
-            this.fixtureManager.addTeamInfo(teamId, name, score, match, roundIndex);
+            this.fixtureManager.addTeamInfo(teamId, name, score, match, roundIndex, tournamentId);
           }).catch(err => {
-            View.showError(err.message || 'Error occurs');
+            View.showError(err.message || 'Error occurs'); console.log(err)
           });;
         });
       });
 
-      if (numberOfRounds > 1) {
-        this._getRestOfMatchResults(numberOfRounds);
-      }
-
     }).catch(err => {
-      console.log('err', err);
-      View.showError(err.message || 'Error occurs');
+      View.showError(err.message || 'Error occurs'); console.log(err)
     });
   }
 
   _getNumberOfRounds() {
     const { teamsPerMatch, numberOfTeams } = this;
     return Math.round(Math.log(numberOfTeams) / Math.log(teamsPerMatch));
-  }
-
-  _getMatchesPerRound(roundIndex) {
-    const { teamsPerMatch, numberOfTeams } = this;
-    return numberOfTeams / Math.pow(teamsPerMatch, roundIndex + 1);
-  }
-
-  _getRestOfMatchResults(numberOfRounds) {
-    for (let roundIndex = 1; roundIndex < numberOfRounds; roundIndex++) {
-      for (let matchId = 0; matchId < this._getMatchesPerRound(roundIndex); matchId++) {
-        this.tournamentService.getMatchData(this.tournamentId, roundIndex, matchId).then(matchResult => {
-          this.fixtureManager.addMatchUp(matchId, roundIndex, matchResult.score, this.tournamentId);
-        }).catch(err => {
-          View.showError(err.message || 'Error occurs');
-        });
-      }
-    }
   }
 }
 
