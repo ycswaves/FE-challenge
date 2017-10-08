@@ -30,6 +30,9 @@ class TournamentService {
     return res.then(data => {
       this._requestHandled()
       return data.json()
+    }).catch(err => {
+      View.showError(err.message || 'Error occurs'); 
+      console.log(err);
     });
   }
 

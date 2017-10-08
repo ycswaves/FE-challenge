@@ -26,9 +26,7 @@ class FixtureManager {
         this._handleWinner(matchResult);
       });
 
-    }).catch(err => {
-      View.showError(err.message || 'Error occurs'); console.log(err)
-    });
+    })
 
   }
 

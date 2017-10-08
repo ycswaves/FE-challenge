@@ -31,15 +31,11 @@ class Tournament {
           this.tournamentService.getTeamData(tournamentId, teamId).then(teamInfo => {
             const { teamId, name, score } = teamInfo;
             this.fixtureManager.addTeamInfo(teamId, name, score, match, roundIndex, tournamentId);
-          }).catch(err => {
-            View.showError(err.message || 'Error occurs'); console.log(err)
-          });;
+          })
         });
       });
 
-    }).catch(err => {
-      View.showError(err.message || 'Error occurs'); console.log(err)
-    });
+    })
   }
 
   _getNumberOfRounds() {
