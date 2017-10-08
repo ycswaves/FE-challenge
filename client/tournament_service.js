@@ -11,7 +11,6 @@ class TournamentService {
   constructor() {
     this.requestCount = 0;
     this.requestQueue = [];
-    this._requestHandled = this._requestHandled.bind(this);
   }
 
   _applyLimit(fn) {
@@ -25,6 +24,13 @@ class TournamentService {
       this.requestCount++;        
       return fn();
     }
+  }
+
+  _handlePromise(res) {
+    return res.then(data => {
+      this._requestHandled()
+      return data.json()
+    });
   }
 
   _requestHandled() {
@@ -41,42 +47,33 @@ class TournamentService {
       const promise = fetch("/tournament", FetchUtil.getFetchConfig(
         FetchUtil.parameterize({teamsPerMatch, numberOfTeams})
       ));
-      return FetchUtil.handlePromise(promise, this._requestHandled);
+      return this._handlePromise(promise);
     })
   }
 
   getTeamData(tournamentId, teamId) {
     return this._applyLimit(() => {
       const promise = fetch(`/team?${FetchUtil.parameterize({tournamentId, teamId})}`);
-      return FetchUtil.handlePromise(promise, this._requestHandled);
+      return this._handlePromise(promise);
     })
   }
 
   getMatchData(tournamentId, round, match) {
     return this._applyLimit(() => {
       const promise = fetch(`/match?${FetchUtil.parameterize({tournamentId, round, match})}`);
-      return FetchUtil.handlePromise(promise, this._requestHandled);
+      return this._handlePromise(promise);
     })
   }
 
   getWinner(tournamentId, matchScore, teamScores) {
     return this._applyLimit(() => {
       const promise = fetch(`/winner?${FetchUtil.parameterize({tournamentId, teamScores, matchScore})}`);
-      return FetchUtil.handlePromise(promise, this._requestHandled);
+      return this._handlePromise(promise);
     })
   }
 }
 
 class FetchUtil {
-
-  static handlePromise(res, notifyReqQueue) {
-    return res.then(data => {
-      notifyReqQueue()
-      return data.json()
-    });
-  }
-
-
 
   static getFetchConfig(body) {
     return {
