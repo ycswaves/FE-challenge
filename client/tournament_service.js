@@ -15,19 +15,14 @@ class TournamentService {
 
   _applyLimit(fn) {
     if (this.requestCount > REQ_COUNT_THRESHOLD) {
-      return new Promise(resolve => {
-        this.requestQueue.push(() => {
-          resolve(fn());
-        });
-      });
-    } else {
       this.requestCount++;        
-      return fn();
     }
+    return Promise.resolve(fn());
   }
 
   _handlePromise(res) {
-    return res.then(data => {
+    return Promise.resolve(res)
+    .then(data => {
       this._requestHandled()
       return data.json()
     }).catch(err => {
