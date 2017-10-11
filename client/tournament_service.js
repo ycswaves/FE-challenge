@@ -8,7 +8,8 @@ const defaultFetchConfigs = {
 const REQ_COUNT_THRESHOLD = 1000;
 
 class TournamentService {
-  constructor() {
+  constructor(httpClient) {
+    this.fetch = httpClient || window.fetch.bind(window);
     this.requestCount = 0;
     this.requestQueue = [];
   }
@@ -42,7 +43,7 @@ class TournamentService {
 
   getMatchUps(teamsPerMatch, numberOfTeams) {
     return this._applyLimit(() => {
-      const promise = fetch("/tournament", FetchUtil.getFetchConfig(
+      const promise = this.fetch("/tournament", FetchUtil.getFetchConfig(
         FetchUtil.parameterize({teamsPerMatch, numberOfTeams})
       ));
       return this._handlePromise(promise);
@@ -51,21 +52,21 @@ class TournamentService {
 
   getTeamData(tournamentId, teamId) {
     return this._applyLimit(() => {
-      const promise = fetch(`/team?${FetchUtil.parameterize({tournamentId, teamId})}`);
+      const promise = this.fetch(`/team?${FetchUtil.parameterize({tournamentId, teamId})}`);
       return this._handlePromise(promise);
     })
   }
 
   getMatchData(tournamentId, round, match) {
     return this._applyLimit(() => {
-      const promise = fetch(`/match?${FetchUtil.parameterize({tournamentId, round, match})}`);
+      const promise = this.fetch(`/match?${FetchUtil.parameterize({tournamentId, round, match})}`);
       return this._handlePromise(promise);
     })
   }
 
   getWinner(tournamentId, matchScore, teamScores) {
     return this._applyLimit(() => {
-      const promise = fetch(`/winner?${FetchUtil.parameterize({tournamentId, teamScores, matchScore})}`);
+      const promise = this.fetch(`/winner?${FetchUtil.parameterize({tournamentId, teamScores, matchScore})}`);
       return this._handlePromise(promise);
     })
   }
