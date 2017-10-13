@@ -5,7 +5,7 @@ const defaultFetchConfigs = {
   }
 }
 
-const REQ_COUNT_THRESHOLD = 1000;
+const REQ_COUNT_THRESHOLD = 1;
 
 class TournamentService {
   constructor(httpClient) {
@@ -16,8 +16,13 @@ class TournamentService {
 
   _applyLimit(fn) {
     if (this.requestCount > REQ_COUNT_THRESHOLD) {
-      this.requestCount++;        
+      return new Promise(resolve => {
+        this.requestQueue.push(() => {
+          resolve(fn())
+        });
+      })
     }
+    this.requestCount++;    
     return Promise.resolve(fn());
   }
 
@@ -28,16 +33,17 @@ class TournamentService {
       return data.json()
     }).catch(err => {
       View.showError(err.message || 'Error occurs'); 
-      console.log(err);
     });
   }
 
   _requestHandled() {
     this.requestCount--;
 
+
     if (this.requestQueue.length > 0) {
       const fn = this.requestQueue.shift();
-      fn();
+      fn()
+      this.requestCount++;
     }
   }
 
